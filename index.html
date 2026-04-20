@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Bemap Road Extractor &amp; Route Optimizer</title>
+
+    <!-- Favicon: indigo disc (matches palette) -->
+    <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="%234f46e5"/></svg>'>
+
+    <!-- BeMap JS API -->
+    <link rel="stylesheet" href="lib/bemap-js-api/leaflet.css" />
+    <link rel="stylesheet" href="lib/bemap-js-api/leaflet.draw.css" />
+    <link rel="stylesheet" href="lib/bemap-js-api/bemap-js-api.css" />
+
+    <!-- Application CSS -->
+    <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+    <!-- ==================== SIDEBAR ==================== -->
+    <div id="sidebar">
+        <div id="sidebar-content">
+            <h1>Bemap Road Extractor</h1>
+
+            <!-- Configuration Bemap -->
+            <div class="section" id="config-section">
+                <h2>Configuration Bemap</h2>
+                <div id="config-summary"></div>
+                <button id="open-config-btn" style="margin-top:8px;">Modifier</button>
+            </div>
+
+            <!-- Instructions (dynamic) -->
+            <div class="section" id="instructions-section">
+                <h2>Instructions</h2>
+                <p class="instructions" id="instructions-text" aria-live="polite">
+                    1. Configurez vos identifiants Bemap (bouton Modifier).
+                </p>
+            </div>
+
+            <!-- Clear All (standalone red, visible when hasPolygon) -->
+            <div class="section" id="clear-all-section" style="display:none;">
+                <button id="clear-all-btn" class="btn-red">Tout effacer (recommencer)</button>
+            </div>
+
+            <!-- 1. Zone de sélection -->
+            <div class="section zo-step" id="zone-section" style="display:none;">
+                <h2>1. Zone de s&eacute;lection</h2>
+                <button id="draw-polygon-btn" class="btn-emerald">Dessiner un polygone</button>
+                <div id="bbox-info" class="coords" style="margin-top: 10px;">
+                    <em>Cliquez le bouton puis cliquez sur la carte. Double-clic pour terminer.</em>
+                </div>
+            </div>
+
+            <!-- 2. Options d'extraction -->
+            <div class="section zo-step" id="options-section" style="display:none;">
+                <h2>2. Options d'extraction</h2>
+                <div class="form-group">
+                    <label>Mode de transport</label>
+                    <select id="transport-type">
+                        <option value="CAR">Voiture</option>
+                        <option value="TRUCK">Camion</option>
+                        <option value="BICYCLE">V&eacute;lo</option>
+                        <option value="MOTORCYCLE">Moto</option>
+                        <option value="PEDESTRIAN">Pi&eacute;ton</option>
+                        <option value="TAXI">Taxi</option>
+                        <option value="PUBLIC_BUS">Bus</option>
+                        <option value="EMERGENCY">Urgence</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 4px;">
+                    <label style="font-size: 0.85em; cursor: pointer;">
+                        <input type="checkbox" id="filter-house-numbers"> Seulement avec n&deg; de rue
+                    </label>
+                </div>
+                <div style="margin-bottom: 4px;">
+                    <label style="font-size: 0.85em; cursor: pointer;">
+                        <input type="checkbox" id="filter-clipped"> Exclure &eacute;l&eacute;ments hors polygone
+                    </label>
+                </div>
+            </div>
+
+            <!-- 3. Actions -->
+            <div class="section zo-step" id="actions-section" style="display:none;">
+                <h2>3. Actions</h2>
+                <button id="extract-btn" disabled>Extraire les segments</button>
+                <button id="download-btn" class="btn-emerald" style="display:none;">T&eacute;l&eacute;charger CSV</button>
+                <div id="extract-status" class="status" aria-live="polite"></div>
+                <div id="extract-stats" class="stats"></div>
+            </div>
+
+            <!-- 4. Départ / Arrivée -->
+            <div class="section zo-step" id="startend-section" style="display:none;">
+                <h2>4. D&eacute;part / Arriv&eacute;e</h2>
+                <p class="instructions" style="margin-bottom: 10px;">
+                    Cliquez sur la carte pour d&eacute;finir d&eacute;part (vert) et arriv&eacute;e (rouge).
+                </p>
+                <div class="coords" id="route-info">
+                    <div id="start-info">D&eacute;part: <em>cliquez sur la carte</em></div>
+                    <div id="end-info">Arriv&eacute;e: <em>cliquez sur la carte</em></div>
+                </div>
+                <button id="clear-route-btn" class="btn-red" style="display:none;">Effacer d&eacute;part/arriv&eacute;e</button>
+            </div>
+
+            <!-- 5. Optimisation de route -->
+            <div class="section zo-step" id="optimize-section" style="display:none;">
+                <h2>5. Optimisation de route</h2>
+                <div style="margin: 0 0 8px;">
+                    <label style="font-size: 0.85em; cursor: pointer;">
+                        <input type="checkbox" id="minimal-waypoints" checked> Waypoints minimaux
+                    </label>
+                </div>
+                <button id="optimize-btn" disabled>Optimiser la route</button>
+                <div id="optimize-status" class="status" aria-live="polite"></div>
+                <div id="route-stats" class="stats"></div>
+            </div>
+
+            <!-- 6. Animation -->
+            <div class="section zo-step" id="animation-section" style="display:none;">
+                <h2>6. Animation</h2>
+                <button id="animate-btn" class="btn-indigo">Animer le parcours</button>
+                <button id="stop-animate-btn" class="btn-amber" style="display:none;">Stop animation</button>
+                <div style="margin-top: 8px;">
+                    <label style="font-size: 0.8em; color: #555;">Vitesse : <span id="speed-label">&times;1.0</span></label>
+                    <input type="range" id="anim-speed" min="1" max="50" value="10" style="width: 100%;">
+                </div>
+            </div>
+
+            <!-- 7. Couches -->
+            <div class="section zo-step" id="layers-section" style="display:none;">
+                <h2>7. Couches</h2>
+                <div style="display: flex; gap: 6px;">
+                    <button id="toggle-routing-btn" class="btn-indigo btn-inline">Masquer Routing</button>
+                    <button id="toggle-traceroute-btn" class="btn-rose btn-inline" style="display:none;">Masquer TraceRoute</button>
+                </div>
+                <button id="toggle-points-btn" class="btn-cyan" style="margin-top: 6px;">Afficher liste des points</button>
+            </div>
+
+            <!-- Liste des points (on-demand toggle, right below Couches) -->
+            <div class="section" id="points-list-section" style="display: none; max-height: 250px; overflow-y: auto;">
+                <h2>Points du parcours</h2>
+                <div id="points-list"></div>
+            </div>
+
+            <!-- 8. Téléchargements -->
+            <div class="section zo-step" id="downloads-section" style="display:none;">
+                <h2>8. T&eacute;l&eacute;chargements</h2>
+                <button id="download-segments-ordered-btn" class="btn-violet" style="display:none;">T&eacute;l&eacute;charger segments + ordre</button>
+                <button id="download-min-wp-btn" class="btn-violet" style="display:none;">T&eacute;l&eacute;charger waypoints minimaux</button>
+            </div>
+
+            <!-- Legende -->
+            <div class="section">
+                <h2>L&eacute;gende</h2>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #10b981;"></div>
+                        <span>Point extrait (segment)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-bar" style="background: #4f46e5;"></div>
+                        <span>Route optimis&eacute;e</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-bar" style="background: #f43f5e; background-image: linear-gradient(90deg,#f43f5e 50%,transparent 50%); background-size: 8px 4px;"></div>
+                        <span>TraceRoute</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #10b981; border: 2px solid #fff; box-shadow: 0 0 0 1px #10b981;"></div>
+                        <span>D&eacute;part</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #ef4444; border: 2px solid #fff; box-shadow: 0 0 0 1px #ef4444;"></div>
+                        <span>Arriv&eacute;e</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #4f46e5; color: #fff; font-size: 8px; font-weight: 700; line-height: 10px; text-align: center; width: 14px; height: 14px; border: 2px solid #fff; box-shadow: 0 0 0 1px #4f46e5;">1</div>
+                        <span>Waypoint num&eacute;rot&eacute; (routage)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #f43f5e; border: 2px solid #fff;"></div>
+                        <span>Waypoint minimal (TraceRoute)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAP ==================== -->
+    <div id="map"></div>
+
+    <!-- ==================== CONFIG MODAL ==================== -->
+    <div class="modal-backdrop" id="config-modal">
+        <div class="modal-box">
+            <h3>Configuration Bemap</h3>
+            <p class="subtitle">S&eacute;lectionnez l'environnement et saisissez vos identifiants. Ils servent au fond de carte WMS et &agrave; toutes les APIs.</p>
+            <div class="form-group">
+                <label for="modal-env">Environnement</label>
+                <select id="modal-env"></select>
+            </div>
+            <div class="form-group">
+                <label for="modal-user">Utilisateur</label>
+                <input type="text" id="modal-user" placeholder="username" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="modal-pass">Mot de passe</label>
+                <input type="password" id="modal-pass" placeholder="password" autocomplete="current-password">
+            </div>
+            <div class="form-group">
+                <label style="font-size: 0.85em; cursor: pointer;">
+                    <input type="checkbox" id="modal-remember"> Se souvenir (sinon, identifiants oubli&eacute;s &agrave; la fermeture de l'onglet)
+                </label>
+            </div>
+            <div class="err" id="modal-err"></div>
+            <div class="actions">
+                <button class="cancel" id="modal-cancel">Annuler</button>
+                <button id="modal-save">Valider</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SCRIPTS ==================== -->
+    <!-- Libraries -->
+    <script src="lib/jquery/jquery.min.js"></script>
+    <script src="lib/bemap-js-api/leaflet.js"></script>
+    <script src="lib/bemap-js-api/leaflet.draw.js"></script>
+    <script src="lib/bemap-js-api/bemap-js-api.js"></script>
+
+    <!-- Application: core -->
+    <script src="js/app/zone-optimizer.js"></script>
+    <script src="js/app/utils.js"></script>
+    <script src="js/app/icons.js"></script>
+    <script src="js/app/config.js"></script>
+    <script src="js/app/ui.js"></script>
+    <script src="js/app/loader.js"></script>
+
+    <!-- Application: DAO -->
+    <script src="js/dao/dao.js"></script>
+    <script src="js/dao/extraction-dao.js"></script>
+    <script src="js/dao/routing-dao.js"></script>
+    <script src="js/dao/traceroute-dao.js"></script>
+
+    <!-- Application: features -->
+    <script src="js/app/map.js"></script>
+    <script src="js/app/polygon-edit.js"></script>
+    <script src="js/app/extraction.js"></script>
+    <script src="js/app/routing.js"></script>
+    <script src="js/app/traceroute.js"></script>
+    <script src="js/app/animation.js"></script>
+    <script src="js/app/points-list.js"></script>
+
+    <!-- Bootstrap -->
+    <script>
+    $(document).ready(function () {
+        ZO.Config.init();
+        ZO.Map.init();
+        ZO.Polygon.init();
+        ZO.Extraction.init();
+        ZO.Routing.init();
+        ZO.Animation.init();
+        ZO.PointsList.init();
+        ZO.UI.init();
+
+        /* If not configured, open modal */
+        var c = ZO.Config.getCreds();
+        if (!c.env || !c.user) {
+            ZO.Config.openModal();
+        }
+    });
+    </script>
+</body>
+</html>

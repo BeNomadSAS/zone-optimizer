@@ -1,0 +1,19 @@
+{
+  "name": "zone-optimizer",
+  "version": "1.3.0",
+  "description": "Bemap Road Extractor & Route Optimizer - Web interface for extracting road segments and optimizing routes using Bemap APIs.",
+  "private": true,
+  "scripts": {
+    "dev": "npx http-server -p 8080 --cors -o index.html"
+  },
+  "keywords": [
+    "bemap",
+    "benomad",
+    "routing",
+    "roads-extractor",
+    "leaflet",
+    "gis"
+  ],
+  "author": "BeNomad",
+  "license": "UNLICENSED"
+}

@@ -1,0 +1,325 @@
+/* ======================================================================
+ * ZONE OPTIMIZER STYLES
+ *
+ * Palette (indigo-led):
+ *   #4f46e5  indigo-600   primary buttons, routing
+ *   #6366f1  indigo-500   accent, polygon border
+ *   #10b981  emerald-500  start, extracted, success buttons
+ *   #ef4444  red-500      end, destructive
+ *   #f43f5e  rose-500     traceroute
+ *   #f59e0b  amber-500    stop / warning
+ *   #06b6d4  cyan-500     informational
+ *   #8b5cf6  violet-500   download actions
+ * ====================================================================== */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    display: flex;
+    height: 100vh;
+    color: #1f2937;
+}
+
+/* --- Sidebar --- */
+#sidebar {
+    width: 340px;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #e5e7eb;
+    overflow-y: auto;
+}
+#sidebar-content { padding: 15px; }
+h1 { font-size: 1.2em; margin-bottom: 12px; color: #1f2937; }
+
+/* --- Sections (white cards) --- */
+.section {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.section h2 { font-size: 0.9em; margin-bottom: 8px; color: #4b5563; }
+
+/* --- Forms --- */
+.form-group { margin-bottom: 8px; }
+.form-group label { display: block; font-size: 0.8em; color: #555; margin-bottom: 3px; }
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group select {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+.form-row { display: flex; gap: 8px; }
+.form-row .form-group { flex: 1; }
+
+/* --- Buttons (indigo by default) --- */
+button {
+    background: #4f46e5;         /* indigo-600 */
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    width: 100%;
+    margin-top: 8px;
+    transition: background 0.15s, transform 0.05s;
+}
+button:hover { background: #4338ca; }                /* indigo-700 */
+button:active { transform: translateY(1px); }
+button:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+/* Button variants */
+.btn-emerald { background: #10b981; }
+.btn-emerald:hover { background: #059669; }
+.btn-indigo  { background: #6366f1; }
+.btn-indigo:hover  { background: #4f46e5; }
+.btn-rose    { background: #f43f5e; }
+.btn-rose:hover    { background: #e11d48; }
+.btn-amber   { background: #f59e0b; }
+.btn-amber:hover   { background: #d97706; }
+.btn-cyan    { background: #06b6d4; }
+.btn-cyan:hover    { background: #0891b2; }
+.btn-violet  { background: #8b5cf6; }
+.btn-violet:hover  { background: #7c3aed; }
+.btn-red     { background: #ef4444; }
+.btn-red:hover     { background: #dc2626; }
+
+.btn-inline { flex: 1; margin-top: 0; font-size: 0.8em; padding: 7px 4px; }
+
+/* --- Draw polygon button (active state) --- */
+.draw-btn.active {
+    background: #ef4444;
+}
+.draw-btn.active:hover { background: #dc2626; }
+
+/* --- Status / Stats --- */
+.status { margin-top: 10px; padding: 8px; border-radius: 6px; font-size: 0.85em; }
+.status.loading { background: #fef3c7; color: #92400e; }   /* amber */
+.status.success { background: #d1fae5; color: #065f46; }   /* emerald */
+.status.error   { background: #fee2e2; color: #991b1b; }   /* red */
+.stats { margin-top: 8px; font-size: 0.85em; color: #6b7280; }
+.coords { font-family: monospace; font-size: 0.8em; color: #6b7280; }
+.coords div { margin: 3px 0; }
+.instructions { font-size: 0.8em; color: #6b7280; line-height: 1.4; }
+
+/* --- Points list --- */
+.point-item {
+    padding: 8px;
+    margin: 4px 0;
+    background: #f8f9fa;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    border-left: 3px solid #4f46e5;
+    transition: background 0.15s;
+}
+.point-item:hover { background: #eef2ff; }             /* indigo-50 */
+.point-item.start { border-left-color: #10b981; }
+.point-item.end   { border-left-color: #ef4444; }
+.point-item .order { font-weight: bold; color: #4f46e5; }
+.point-item .coords { color: #6b7280; font-family: monospace; font-size: 0.9em; }
+
+/* --- Legend --- */
+.legend { font-size: 0.75em; margin-top: 4px; }
+.legend-item { display: flex; align-items: center; margin: 6px 0; gap: 10px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.legend-bar { width: 22px; height: 4px; border-radius: 2px; }
+
+/* --- Map --- */
+#map { flex: 1; height: 100vh; }
+
+/* Cursor during active drawing (set by bemap._clickDraw) */
+.leaflet-container.bemap-drawing-active { cursor: crosshair; }
+
+/* --- Config modal --- */
+.modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(17, 24, 39, 0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 10000;
+}
+.modal-backdrop.open { display: flex; }
+.modal-box {
+    background: white;
+    border-radius: 10px;
+    padding: 22px 24px;
+    width: 380px;
+    max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(17, 24, 39, 0.25);
+}
+.modal-box h3 { font-size: 1.05em; margin-bottom: 4px; color: #1f2937; }
+.modal-box .subtitle { font-size: 0.8em; color: #6b7280; margin-bottom: 14px; }
+.modal-box .form-group { margin-bottom: 10px; }
+.modal-box label { display: block; font-size: 0.8em; color: #4b5563; margin-bottom: 4px; }
+.modal-box input, .modal-box select {
+    width: 100%; padding: 7px 9px;
+    border: 1px solid #d1d5db; border-radius: 5px; font-size: 0.85em;
+}
+.modal-box .actions { display: flex; gap: 8px; margin-top: 14px; }
+.modal-box .actions button { margin-top: 0; }
+.modal-box .actions button.cancel { background: #9ca3af; }
+.modal-box .actions button.cancel:hover { background: #6b7280; }
+.modal-box .err { color: #dc2626; font-size: 0.8em; margin-top: 6px; min-height: 1em; }
+
+/* --- Config summary --- */
+#config-summary { font-size: 0.82em; color: #4b5563; line-height: 1.5; }
+#config-summary .label { color: #9ca3af; }
+#config-summary .empty { color: #dc2626; font-style: italic; }
+
+/* --- Section highlight pulse --- */
+@keyframes highlightPulse {
+    0%, 100% { box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    50%      { box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.45); }
+}
+.section.highlight { animation: highlightPulse 1.5s ease-in-out infinite; }
+
+/* --- Wizard step fade-in --- */
+@keyframes zoStepAppear {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.zo-step {
+    animation: zoStepAppear 0.25s ease-out;
+    /* Offset scroll-into-view target so sticky instructions don't overlap */
+    scroll-margin-top: 96px;
+    scroll-margin-bottom: 20px;
+}
+
+/* Numbered indigo dot prefix on wizard section headers */
+.section.zo-step h2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.section.zo-step h2::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: #6366f1;  /* indigo-500 */
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Compact clear-all card (no heading) */
+#clear-all-section { padding: 8px 12px; }
+#clear-all-section button { margin-top: 0; }
+
+/* --- Sticky instructions at top of sidebar scroll ('glass' card) --- */
+#instructions-section {
+    position: sticky;
+    /* Offset leaves breathing room above the sticky so the Configuration
+     * card doesn't visually butt against it when scrolling. */
+    top: 10px;
+    z-index: 50;
+    margin-top: 8px;
+    padding: 14px 14px 12px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: saturate(160%) blur(10px);
+    -webkit-backdrop-filter: saturate(160%) blur(10px);
+    box-shadow: 0 4px 14px rgba(17, 24, 39, 0.08);
+    border: 1px solid rgba(229, 231, 235, 0.7);
+}
+#instructions-section h2 { margin-bottom: 6px; }
+#instructions-section .instructions {
+    font-weight: 500;
+    color: #1f2937;
+    margin: 0;
+}
+/* Prevent any accidental highlight pulse on the sticky card */
+#instructions-section.highlight { animation: none; }
+
+/* --- bemap popup styling override (indigo accent) --- */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 4px 14px rgba(17, 24, 39, 0.18);
+}
+.leaflet-popup-content { font-size: 0.85em; color: #1f2937; }
+.leaflet-popup-tip { box-shadow: 0 4px 14px rgba(17, 24, 39, 0.12); }
+
+/* ======================================================================
+ * LOADER - full-map overlay with animated multi-ring spinner
+ * 2026-style: gradient conic rings, glass card, backdrop blur
+ * ====================================================================== */
+
+/* #map must be relative so the absolute overlay anchors inside it */
+#map { position: relative; }
+
+.zo-loader-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1200;           /* above Leaflet controls (~1000) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;    /* inert when hidden */
+    opacity: 0;
+    background: rgba(17, 24, 39, 0.28);
+    backdrop-filter: saturate(140%) blur(3px);
+    -webkit-backdrop-filter: saturate(140%) blur(3px);
+    transition: opacity 0.18s ease-out;
+}
+.zo-loader-overlay.zo-loader-visible {
+    pointer-events: auto;    /* blocks map clicks */
+    opacity: 1;
+}
+
+.zo-loader-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding: 26px 34px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 20px 60px rgba(17, 24, 39, 0.22),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    animation: zoLoaderCardIn 0.35s cubic-bezier(.2, .9, .3, 1);
+}
+@keyframes zoLoaderCardIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- Spinner: classic ring (indigo border with transparent top) --- */
+.zo-loader-spinner {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid rgba(99, 102, 241, 0.18);     /* indigo-500 faint track */
+    border-top-color: #4f46e5;                       /* indigo-600 head */
+    animation: zoLoaderSpin 0.9s linear infinite;
+}
+@keyframes zoLoaderSpin {
+    to { transform: rotate(360deg); }
+}
+
+.zo-loader-message {
+    font-size: 0.92em;
+    font-weight: 500;
+    color: #1f2937;
+    letter-spacing: 0.01em;
+    text-align: center;
+    max-width: 280px;
+}
+
+/* ======================================================================
+ * ANIMATION MARKER TRANSITIONS
+ * Smooth interpolation between setCoordinate() updates, and fade-out on stop.
+ * ====================================================================== */
+.zo-anim-marker {
+    transition: transform 0.08s linear, opacity 0.28s ease-out;
+    will-change: transform, opacity;
+}
+.zo-anim-marker-fade {
+    opacity: 0 !important;
+}

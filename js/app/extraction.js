@@ -41,15 +41,15 @@ ZO.Extraction.init = function () {
         if (!ZO.state.currentPolygon) return;
 
         if (!ZO.getContext() || !ZO.Config.getCreds().user) {
-            ZO.Extraction.setStatus('Veuillez configurer vos identifiants Bemap.', 'error');
+            ZO.Extraction.setStatus('Please configure your Bemap credentials.', 'error');
             ZO.Config.openModal();
             return;
         }
 
         var $btn = $(this);
         $btn.prop('disabled', true);
-        ZO.Extraction.setStatus('Extraction en cours...', 'loading');
-        ZO.Loader.show('Extraction en cours...');
+        ZO.Extraction.setStatus('Extracting...', 'loading');
+        ZO.Loader.show('Extracting...');
         ZO.Map.clear('points');
 
         /* Build request: polygon must be closed */
@@ -116,8 +116,8 @@ ZO.Extraction.init = function () {
                     ZO._map.onMarker(marker, bemap.Map.EventType.CLICK, ZO.Map.showTooltip);
                 });
 
-                ZO.Extraction.setStatus('Extraction termin\u00e9e !', 'success');
-                $('#extract-stats').html('<strong>' + roads.length + '</strong> segments extraits');
+                ZO.Extraction.setStatus('Extraction done!', 'success');
+                $('#extract-stats').html('<strong>' + roads.length + '</strong> segments extracted');
 
                 ZO.state.extractedPoints = points;
                 ZO.state.clickMode = 'start';
@@ -129,7 +129,7 @@ ZO.Extraction.init = function () {
             function (xhr, response) {
                 if (xhr && xhr.status === 0) { ZO.Loader.hide(); $btn.prop('disabled', false); return; }
                 var errMsg = ZO.Utils.parseApiError(xhr, response);
-                ZO.Extraction.setStatus('Erreur: ' + errMsg, 'error');
+                ZO.Extraction.setStatus('Error: ' + errMsg, 'error');
                 $btn.prop('disabled', false);
                 if (ZO.UI) ZO.UI.refresh();
                 ZO.Loader.hide();

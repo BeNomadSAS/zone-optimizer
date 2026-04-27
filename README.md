@@ -5,7 +5,7 @@
 
 **Live demo:** https://benomadsas.github.io/zone-optimizer/
 
-![Version](https://img.shields.io/badge/version-1.3.0-4f46e5) ![Stack](https://img.shields.io/badge/stack-bemap--js--api%20%7C%20jQuery-6366f1) ![Status](https://img.shields.io/badge/status-sample-10b981)
+![Version](https://img.shields.io/badge/version-1.4.0-4f46e5) ![Stack](https://img.shields.io/badge/stack-bemap--js--api%20%7C%20jQuery-6366f1) ![Status](https://img.shields.io/badge/status-sample-10b981)
 
 ## What this sample shows
 

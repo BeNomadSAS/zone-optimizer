@@ -2,6 +2,21 @@
 
 All notable changes to the Zone Optimizer project are documented in this file.
 
+## [1.4.0] - 2026-04-27
+
+UI translated from French to English. The sample is now consistent with the rest of zone-optimizer's documentation, READMEs, and code comments — the user-facing language was the only French part left and has been the main friction point for non-French integrators evaluating the project.
+
+### CHANGED
+
+- All user-facing strings translated to English in `index.html` (sidebar sections, transport mode options, legend, modal, instructions) and in the JavaScript modules that build dynamic strings: `config.js` (modal errors, summary), `ui.js` (wizard instructions), `loader.js` (overlay default), `extraction.js` (status + stats), `routing.js` (status, start/end labels, distance/duration, layer toggles), `traceroute.js` (minimal waypoints + match line), `points-list.js` (Start/End/Point labels, list toggle), `polygon-edit.js` (bbox info + drawing help), `utils.js` (`parseApiError` for 0/401/403/404/5xx and unknown).
+- `<html lang="fr">` → `<html lang="en">`.
+- Bbox cardinal letter `O` (Ouest) → `W` (West).
+- Routing API `outputLanguage: 'fr'` → `'en'` and TraceRoute `language: 'fr'` → `'en'` so navigation instructions returned by Bemap match the UI language.
+
+### DOCS
+
+- `package.json`, `ZO.version`, README badge bumped to 1.4.0.
+
 ## [1.3.0] - 2026-04-15
 
 Cross-project alignment release. Distance helpers ported verbatim from `bfleet/WebContent/js/app/tool.js` so logic can flow back and forth between zone-optimizer and bfleet. Critical CSV-mapping bug rewritten to use the API's authoritative `inputOrder` field instead of fragile client-side proximity matching.

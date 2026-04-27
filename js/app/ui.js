@@ -102,12 +102,12 @@ ZO.UI._activeStep = null;
  */
 ZO.UI._updateInstructions = function (f) {
     var msg;
-    if (!f.hasConfig)          msg = '1. Configurez vos identifiants Bemap (bouton Modifier).';
-    else if (!f.hasPolygon)    msg = '2. Dessinez un polygone sur la carte pour d\u00e9limiter la zone.';
-    else if (!f.hasExtraction) msg = '3. Cliquez "Extraire les segments" pour r\u00e9cup\u00e9rer les routes.';
-    else if (!f.hasStartEnd)   msg = '4. Cliquez sur la carte pour placer le d\u00e9part puis l\'arriv\u00e9e.';
-    else if (!f.hasRoute)      msg = '5. Cliquez "Optimiser la route".';
-    else                       msg = 'Termin\u00e9 ! Animez le parcours ou t\u00e9l\u00e9chargez les r\u00e9sultats.';
+    if (!f.hasConfig)          msg = '1. Configure your Bemap credentials (Edit button).';
+    else if (!f.hasPolygon)    msg = '2. Draw a polygon on the map to define the area.';
+    else if (!f.hasExtraction) msg = '3. Click "Extract segments" to fetch the roads.';
+    else if (!f.hasStartEnd)   msg = '4. Click on the map to place the start, then the end.';
+    else if (!f.hasRoute)      msg = '5. Click "Optimize route".';
+    else                       msg = 'Done! Animate the route or download the results.';
     $('#instructions-text').text(msg);
 };
 
@@ -181,7 +181,7 @@ ZO.UI.clearAll = function () {
     ZO.Polygon.clearAllResults();
 
     /* Reset bbox panel */
-    $('#bbox-info').html('<em>Cliquez le bouton puis cliquez sur la carte. Double-clic pour terminer.</em>');
+    $('#bbox-info').html('<em>Click the button, then click on the map. Double-click to finish.</em>');
 
     ZO.UI.refresh();
 };

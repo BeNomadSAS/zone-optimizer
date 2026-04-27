@@ -44,8 +44,8 @@ ZO.Polygon.clearAllResults = function () {
     /* Clear status/stats text (content, not visibility) */
     $('#extract-stats').html('');
     $('#extract-status').text('').attr('class', 'status');
-    $('#start-info').html('D\u00e9part: <em>cliquez sur la carte</em>');
-    $('#end-info').html('Arriv\u00e9e: <em>cliquez sur la carte</em>');
+    $('#start-info').html('Start: <em>click on the map</em>');
+    $('#end-info').html('End: <em>click on the map</em>');
     $('#route-stats').html('');
     $('#optimize-status').text('');
     $('#points-list').html('');
@@ -59,18 +59,18 @@ ZO.Polygon.clearAllResults = function () {
 ZO.Polygon.updateBboxInfo = function () {
     var poly = ZO.state.currentBemapPolygon;
     if (!poly || !poly.coords || poly.coords.length === 0) {
-        $('#bbox-info').html('<em>Cliquez le bouton puis cliquez sur la carte. Double-clic pour terminer.</em>');
+        $('#bbox-info').html('<em>Click the button, then click on the map. Double-click to finish.</em>');
         return;
     }
     var lats = poly.coords.map(function (c) { return c.getLat(); });
     var lons = poly.coords.map(function (c) { return c.getLon(); });
     var n = poly.coords.length;
     $('#bbox-info').html(
-        '<div>Polygone: ' + n + ' points</div>' +
+        '<div>Polygon: ' + n + ' points</div>' +
         '<div>N: ' + Math.max.apply(null, lats).toFixed(5) +
               ', S: ' + Math.min.apply(null, lats).toFixed(5) + '</div>' +
         '<div>E: ' + Math.max.apply(null, lons).toFixed(5) +
-              ', O: ' + Math.min.apply(null, lons).toFixed(5) + '</div>'
+              ', W: ' + Math.min.apply(null, lons).toFixed(5) + '</div>'
     );
 };
 
@@ -124,7 +124,7 @@ ZO.Polygon.startDraw = function () {
     }
 
     /* Reset bbox panel */
-    $('#bbox-info').html('<em>Cliquez sur la carte pour d\u00e9finir les sommets. Double-clic pour terminer.</em>');
+    $('#bbox-info').html('<em>Click on the map to set vertices. Double-click to finish.</em>');
 
     /* Downstream sections hide while drawing is in progress */
     if (ZO.UI) ZO.UI.refresh();

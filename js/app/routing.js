@@ -75,11 +75,11 @@ ZO.Routing._placeMarker = function (which, lat, lon) {
     if (which === 'start') {
         ZO.state.startMarker = marker;
         ZO.state.startPoint = { lat: lat, lon: lon };
-        $('#start-info').html('D\u00e9part: ' + lat.toFixed(5) + ', ' + lon.toFixed(5));
+        $('#start-info').html('Start: ' + lat.toFixed(5) + ', ' + lon.toFixed(5));
     } else {
         ZO.state.endMarker = marker;
         ZO.state.endPoint = { lat: lat, lon: lon };
-        $('#end-info').html('Arriv\u00e9e: ' + lat.toFixed(5) + ', ' + lon.toFixed(5));
+        $('#end-info').html('End: ' + lat.toFixed(5) + ', ' + lon.toFixed(5));
     }
 };
 
@@ -117,15 +117,15 @@ ZO.Routing.init = function () {
         if (!ZO.state.startPoint || !ZO.state.endPoint || ZO.state.extractedPoints.length === 0) return;
 
         if (!ZO.getContext() || !ZO.Config.getCreds().user) {
-            ZO.Routing.setStatus('Veuillez configurer vos identifiants Bemap.', 'error');
+            ZO.Routing.setStatus('Please configure your Bemap credentials.', 'error');
             ZO.Config.openModal();
             return;
         }
 
         var $btn = $(this);
         $btn.prop('disabled', true);
-        ZO.Routing.setStatus('Optimisation en cours...', 'loading');
-        ZO.Loader.show('Optimisation en cours...');
+        ZO.Routing.setStatus('Optimizing...', 'loading');
+        ZO.Loader.show('Optimizing...');
         ZO.Map.clear('routing');
         ZO.Map.clear('traceroute');
 
@@ -149,7 +149,7 @@ ZO.Routing.init = function () {
             geoserver: 'here',
             maxAlternativeRoutes: 0,
             options: ['POLYLINE', 'OPTIMIZED_TRIP', 'WAYPOINTS_POLYLINE'],
-            outputLanguage: 'fr',
+            outputLanguage: 'en',
             routingCriterias: ['FASTEST', 'AVOID_UNPAVED'],
             routingMode: 'MODE_VIAS',
             routingVehicleProfile: {
@@ -238,27 +238,27 @@ ZO.Routing.init = function () {
                 var routeDuration = (route && Number(route.duration)) || 0;
                 var statsHtml =
                     'Distance: <strong>' + (routeLength / 1000).toFixed(2) + ' km</strong><br>' +
-                    'Dur\u00e9e: <strong>' + Math.floor(routeDuration / 60) + ' min ' +
+                    'Duration: <strong>' + Math.floor(routeDuration / 60) + ' min ' +
                     (routeDuration % 60) + ' sec</strong>';
 
                 if ($('#minimal-waypoints').is(':checked') && ZO.state.routeCoords.length > 0) {
-                    ZO.Routing.setStatus('Calcul des waypoints minimaux (TraceRoute)...', 'loading');
-                    ZO.Loader.update('Calcul des waypoints minimaux...');
+                    ZO.Routing.setStatus('Computing minimal waypoints (TraceRoute)...', 'loading');
+                    ZO.Loader.update('Computing minimal waypoints...');
                     ZO.TraceRoute.compute(statsHtml, function (finalStats) {
-                        ZO.Routing.setStatus('Route optimis\u00e9e !', 'success');
+                        ZO.Routing.setStatus('Route optimized!', 'success');
                         $('#route-stats').html(finalStats);
                         $btn.prop('disabled', false);
                         if (ZO.UI) ZO.UI.refresh();
                         ZO.Loader.hide();
                     }, function (errMsg) {
-                        ZO.Routing.setStatus('Erreur TraceRoute: ' + errMsg, 'error');
+                        ZO.Routing.setStatus('TraceRoute error: ' + errMsg, 'error');
                         $('#route-stats').html(statsHtml);
                         $btn.prop('disabled', false);
                         if (ZO.UI) ZO.UI.refresh();
                         ZO.Loader.hide();
                     });
                 } else {
-                    ZO.Routing.setStatus('Route optimis\u00e9e !', 'success');
+                    ZO.Routing.setStatus('Route optimized!', 'success');
                     $('#route-stats').html(statsHtml);
                     $btn.prop('disabled', false);
                     if (ZO.UI) ZO.UI.refresh();
@@ -268,7 +268,7 @@ ZO.Routing.init = function () {
             function (xhr, response) {
                 if (xhr && xhr.status === 0) { ZO.Loader.hide(); $btn.prop('disabled', false); return; }
                 var errMsg = ZO.Utils.parseApiError(xhr, response);
-                ZO.Routing.setStatus('Erreur: ' + errMsg, 'error');
+                ZO.Routing.setStatus('Error: ' + errMsg, 'error');
                 $btn.prop('disabled', false);
                 if (ZO.UI) ZO.UI.refresh();
                 ZO.Loader.hide();
@@ -296,8 +296,8 @@ ZO.Routing.init = function () {
         ZO.state.usedOrderByInputIndex = null;
         ZO.state.clickMode = 'start';
 
-        $('#start-info').html('D\u00e9part: <em>cliquez sur la carte</em>');
-        $('#end-info').html('Arriv\u00e9e: <em>cliquez sur la carte</em>');
+        $('#start-info').html('Start: <em>click on the map</em>');
+        $('#end-info').html('End: <em>click on the map</em>');
         $('#route-stats').html('');
         $('#optimize-status').text('').attr('class', 'status');
         $('#points-list').html('');
@@ -310,14 +310,14 @@ ZO.Routing.init = function () {
         var layer = ZO.Map.layers.routing;
         var vis = !layer.isVisible();
         layer.setVisible(vis);
-        $(this).text(vis ? 'Masquer Routing' : 'Afficher Routing').css('opacity', vis ? '1' : '0.6');
+        $(this).text(vis ? 'Hide Routing' : 'Show Routing').css('opacity', vis ? '1' : '0.6');
     });
 
     $('#toggle-traceroute-btn').on('click', function () {
         var layer = ZO.Map.layers.traceroute;
         var vis = !layer.isVisible();
         layer.setVisible(vis);
-        $(this).text(vis ? 'Masquer TraceRoute' : 'Afficher TraceRoute').css('opacity', vis ? '1' : '0.6');
+        $(this).text(vis ? 'Hide TraceRoute' : 'Show TraceRoute').css('opacity', vis ? '1' : '0.6');
     });
 
     /* --- TraceRoute checkbox: clear traceroute state when unchecked --- */

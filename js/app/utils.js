@@ -370,11 +370,11 @@ ZO.Utils.timestampedFilename = function (filename) {
  * @returns {string}
  */
 ZO.Utils.parseApiError = function (xhr, response) {
-    if (xhr && xhr.status === 0)   return 'R\u00e9seau indisponible ou requ\u00eate annul\u00e9e.';
-    if (xhr && xhr.status === 401) return 'Identifiants Bemap invalides (401).';
-    if (xhr && xhr.status === 403) return 'Acc\u00e8s refus\u00e9 (403).';
-    if (xhr && xhr.status === 404) return 'Service introuvable (404).';
-    if (xhr && xhr.status >= 500)  return 'Erreur serveur (' + xhr.status + ').';
+    if (xhr && xhr.status === 0)   return 'Network unavailable or request cancelled.';
+    if (xhr && xhr.status === 401) return 'Invalid Bemap credentials (401).';
+    if (xhr && xhr.status === 403) return 'Access denied (403).';
+    if (xhr && xhr.status === 404) return 'Service not found (404).';
+    if (xhr && xhr.status >= 500)  return 'Server error (' + xhr.status + ').';
     if (response) {
         try {
             var j = JSON.parse(response);
@@ -385,5 +385,5 @@ ZO.Utils.parseApiError = function (xhr, response) {
             return response;
         }
     }
-    return 'Erreur (' + (xhr && xhr.status ? xhr.status : 'inconnue') + ').';
+    return 'Error (' + (xhr && xhr.status ? xhr.status : 'unknown') + ').';
 };

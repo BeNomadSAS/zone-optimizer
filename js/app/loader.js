@@ -5,8 +5,8 @@
  * during long-running API operations (extraction, routing, traceroute).
  *
  * Usage:
- *   ZO.Loader.show('Extraction en cours...');
- *   ZO.Loader.update('Calcul des waypoints minimaux...');
+ *   ZO.Loader.show('Extracting...');
+ *   ZO.Loader.update('Computing minimal waypoints...');
  *   ZO.Loader.hide();
  * ====================================================================== */
 
@@ -22,7 +22,7 @@ ZO.Loader._ensureBuilt = function () {
         '<div class="zo-loader-overlay" role="status" aria-live="polite">' +
           '<div class="zo-loader-card">' +
             '<div class="zo-loader-spinner" aria-hidden="true"></div>' +
-            '<div class="zo-loader-message">Chargement...</div>' +
+            '<div class="zo-loader-message">Loading...</div>' +
           '</div>' +
         '</div>'
     );
@@ -37,7 +37,7 @@ ZO.Loader._ensureBuilt = function () {
  */
 ZO.Loader.show = function (message) {
     ZO.Loader._ensureBuilt();
-    ZO.Loader._$message.text(message || 'Chargement...');
+    ZO.Loader._$message.text(message || 'Loading...');
     ZO.Loader._$overlay.addClass('zo-loader-visible');
 };
 
@@ -47,7 +47,7 @@ ZO.Loader.show = function (message) {
  */
 ZO.Loader.update = function (message) {
     if (!ZO.Loader._$overlay) ZO.Loader._ensureBuilt();
-    ZO.Loader._$message.text(message || 'Chargement...');
+    ZO.Loader._$message.text(message || 'Loading...');
 };
 
 /** Hides the loader overlay and re-enables map interaction. */

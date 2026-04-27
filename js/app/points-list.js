@@ -15,7 +15,7 @@ ZO.PointsList.update = function () {
         var isStart = (i === 0);
         var isEnd = (i === ZO.state.orderedPoints.length - 1);
         var cls = 'point-item' + (isStart ? ' start' : isEnd ? ' end' : '');
-        var label = isStart ? 'D\u00e9part' : isEnd ? 'Arriv\u00e9e' : 'Point ' + i;
+        var label = isStart ? 'Start' : isEnd ? 'End' : 'Point ' + i;
 
         var $div = $('<div>')
             .addClass(cls)
@@ -35,6 +35,6 @@ ZO.PointsList.init = function () {
     $('#toggle-points-btn').on('click', function () {
         var $section = $('#points-list-section');
         $section.toggle();
-        $(this).text($section.is(':visible') ? 'Masquer liste' : 'Afficher liste des points');
+        $(this).text($section.is(':visible') ? 'Hide list' : 'Show points list');
     });
 };

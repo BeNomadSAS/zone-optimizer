@@ -5,7 +5,7 @@
  *
  * Credential storage strategy (v1.2.0+):
  *   - Default: sessionStorage (creds cleared on tab close)
- *   - "Se souvenir" checkbox: localStorage (persists across sessions)
+ *   - "Remember me" checkbox: localStorage (persists across sessions)
  *   - Password is base64-obfuscated at rest (defeats casual inspection only;
  *     NOT a cryptographic control - Basic Auth ultimately transits over
  *     HTTPS on every API call)
@@ -147,12 +147,12 @@ ZO.Config.renderSummary = function () {
     var c = ZO.Config.getCreds();
     var $el = $('#config-summary');
     if (!c.env || !c.user) {
-        $el.html('<span class="empty">Non configur\u00e9</span>');
+        $el.html('<span class="empty">Not configured</span>');
         return;
     }
     $el.empty()
-       .append($('<div>').append($('<span>').addClass('label').text('Env : ')).append(document.createTextNode(ZO.Config.envLabel(c.env))))
-       .append($('<div>').append($('<span>').addClass('label').text('User : ')).append(document.createTextNode(c.user)));
+       .append($('<div>').append($('<span>').addClass('label').text('Env: ')).append(document.createTextNode(ZO.Config.envLabel(c.env))))
+       .append($('<div>').append($('<span>').addClass('label').text('User: ')).append(document.createTextNode(c.user)));
 };
 
 /** Fills the environment <select> in the modal. */
@@ -194,7 +194,7 @@ ZO.Config.init = function () {
     $('#modal-cancel').on('click', function () {
         var c = ZO.Config.getCreds();
         if (!c.env || !c.user) {
-            $('#modal-err').text("Configuration requise pour utiliser l'application.");
+            $('#modal-err').text('Configuration is required to use the application.');
             return;
         }
         ZO.Config.closeModal();
@@ -206,7 +206,7 @@ ZO.Config.init = function () {
         var pass     = $('#modal-pass').val();
         var remember = $('#modal-remember').is(':checked');
         if (!env || !user || !pass) {
-            $('#modal-err').text('Tous les champs sont obligatoires.');
+            $('#modal-err').text('All fields are required.');
             return;
         }
         ZO.Config.saveCreds(env, user, pass, remember);

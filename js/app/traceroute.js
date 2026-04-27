@@ -47,7 +47,7 @@ ZO.TraceRoute.compute = function (statsHtml, onSuccess, onError) {
 
     var request = {
         geoserver: 'here',
-        language: 'fr',
+        language: 'en',
         allowOffRoad: false,
         routingVehicleProfile: { transportMode: 'CAR' },
         options: ['POLYLINE', 'WAYPOINTS'],
@@ -95,8 +95,8 @@ ZO.TraceRoute.compute = function (statsHtml, onSuccess, onError) {
                     ZO._map.onMarker(marker, bemap.Map.EventType.CLICK, ZO.Map.showTooltip);
                 });
 
-                statsHtml += '<br>Waypoints minimaux: <strong>' + Number(traceWaypoints.length) +
-                    '</strong> (sur ' + Number(sampledCoords.length) + ' points polyline)';
+                statsHtml += '<br>Minimal waypoints: <strong>' + Number(traceWaypoints.length) +
+                    '</strong> (out of ' + Number(sampledCoords.length) + ' polyline points)';
 
                 ZO.state.orderedPoints = traceWaypoints.map(function (wp, i) {
                     return { lat: wp.coordinate.lat, lon: wp.coordinate.lon, order: i };
@@ -111,7 +111,7 @@ ZO.TraceRoute.compute = function (statsHtml, onSuccess, onError) {
                 var color = match.score >= 90 ? '#155724' : match.score >= 70 ? '#856404' : '#721c24';
                 statsHtml += '<br><span style="color:' + color + '">Match: <strong>' +
                     match.score.toFixed(1) + '%</strong></span>' +
-                    ' (\u00e9cart moy: ' + match.avgDist.toFixed(1) + 'm, max: ' +
+                    ' (avg gap: ' + match.avgDist.toFixed(1) + 'm, max: ' +
                     match.maxDist.toFixed(1) + 'm, ' +
                     match.pctUnder10m.toFixed(0) + '% < 10m)';
             }

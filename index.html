@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Bemap Road Extractor &amp; Route Optimizer</title>
+
+    <!-- Favicon: BeNomad logo (shipped with bemap-js-api) -->
+    <link rel="icon" type="image/png" href="./bemap-js-api/favicon.png">
+    <link rel="shortcut icon" href="./bemap-js-api/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
+    <!-- BeMap JS API stylesheets (served from /public/bemap-js-api).
+         MapLibre + PMTiles backend — no more Leaflet. The map is constructed
+         AFTER login (see src/app/map.js#mount) because bemap.TilesAuth
+         is a one-shot at MapLibreMap construction time and would silently
+         no-op against an empty-creds Context. -->
+    <link rel="stylesheet" href="./bemap-js-api/maplibre-gl.css" />
+    <link rel="stylesheet" href="./bemap-js-api/bemap-js-api.css" />
+
+    <!-- Apply persisted theme BEFORE the body paints, otherwise dark-mode
+         users see a brief light flash on every page load. -->
+    <script>
+    (function () {
+        try {
+            if (localStorage.getItem('zo_theme') === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            var lang = localStorage.getItem('zo_lang');
+            if (lang === 'en' || lang === 'fr') {
+                document.documentElement.setAttribute('lang', lang);
+            }
+        } catch (e) { /* ignore */ }
+    })();
+    </script>
+  <script type="module" crossorigin src="./assets/main-BKgumFFQ.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/main-CxTa5sfK.css">
+</head>
+<body class="zo-gated">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside id="sidebar">
+        <!-- Header: brand + env badge + language flags + theme toggle -->
+        <div class="panel-head">
+            <!-- Small BeNomad mark in the corner of the sidebar header.
+                 Matches the corner logo on https://fleex-optim.benomad.com/.
+                 Served from benomad.com — no asset to vendor. -->
+            <img class="brand-logo" src="https://benomad.com/assets/benomad-logo.svg" alt="BeNomad">
+            <div class="brand"><span data-i18n="app.brand">Zone Optimizer</span><small data-i18n="app.subtitle">Roads &amp; Routing</small></div>
+            <div class="head-spacer"></div>
+            <span class="badge env-none" id="env-badge">
+                <span class="dot"></span><span id="env-badge-label" data-i18n="env.notConfigured">Non configuré</span>
+            </span>
+            <div class="flags" id="lang-flags" data-i18n-title="lang.title" title="Langue">
+                <span class="flag on" data-lang="fr">🇫🇷</span>
+                <span class="flag" data-lang="en">🇬🇧</span>
+            </div>
+            <button class="theme-toggle" id="theme-toggle" data-i18n-title="theme.title" data-i18n-aria-label="theme.ariaLabel" title="Basculer thème clair / sombre" aria-label="Basculer thème">🌙</button>
+        </div>
+
+        <!-- Body: scrollable card stack -->
+        <div class="panel-body" id="sidebar-content">
+
+            <!-- Sticky guide — numbered step trail.
+                 Beginner-only: a close (×) button writes
+                 zo_guide_dismissed=1 in localStorage and hides the
+                 guide for good. Reset via DevTools:
+                 localStorage.removeItem('zo_guide_dismissed'). -->
+            <div class="guide" id="guide-section">
+                <button type="button" class="guide-close" id="guide-close-btn"
+                        data-i18n-title="guide.close" data-i18n-aria-label="guide.close"
+                        title="Masquer le guide" aria-label="Masquer le guide">×</button>
+                <div class="guide-t" data-i18n="guide.title">Guide</div>
+                <ol class="steps" id="guide-steps">
+                    <li data-step="config"   data-i18n="guide.step.config">Connexion Bemap (environnement + identifiants)</li>
+                    <li data-step="zone"     data-i18n="guide.step.zone">Dessinez un polygone sur la carte</li>
+                    <li data-step="extract"  data-i18n="guide.step.extract">Extraire les segments de la zone</li>
+                    <li data-step="startend" data-i18n="guide.step.startend">Placez le départ puis l'arrivée</li>
+                    <li data-step="optimize" data-i18n="guide.step.optimize">Lancer l'optimisation de la route</li>
+                </ol>
+            </div>
+
+            <!-- Configuration Bemap -->
+            <div class="card" id="config-section">
+                <div class="row">
+                    <div class="grow">
+                        <div class="card-title" style="margin-bottom:6px" data-i18n="config.title">Configuration Bemap</div>
+                        <div id="config-summary"></div>
+                    </div>
+                    <button id="open-config-btn" class="btn" style="width:auto;margin-top:0" data-i18n="config.modify">Modifier</button>
+                </div>
+            </div>
+
+            <!-- Clear All (visible when hasPolygon) -->
+            <div class="card" id="clear-all-section" style="display:none;">
+                <button id="clear-all-btn" class="btn-red" style="margin-top:0" data-i18n="clearAll">Tout effacer (recommencer)</button>
+            </div>
+
+            <!-- 1. Zone de sélection -->
+            <div class="card zo-step" id="zone-section" style="display:none;">
+                <div class="card-title"><span class="step-no">1</span><span data-i18n="zone.title">Zone de sélection</span></div>
+                <button id="draw-polygon-btn" class="btn-emerald" style="margin-top:0" data-i18n="zone.btn.draw">Dessiner un polygone</button>
+                <button id="upload-csv-btn" class="btn" style="margin-top:8px" data-i18n="zone.btn.upload" data-i18n-title="zone.btn.uploadTitle">Importer un CSV (rejouer une extraction)</button>
+                <input type="file" id="csv-upload-input" accept=".csv,text/csv" hidden>
+                <div id="csv-upload-status" class="status" aria-live="polite"></div>
+                <div id="bbox-info" class="coords" style="margin-top:10px;">
+                    <em data-i18n="zone.instructions">Cliquez le bouton puis cliquez sur la carte. Double-clic pour terminer.</em>
+                </div>
+            </div>
+
+            <!-- 2. Options d'extraction -->
+            <div class="card zo-step" id="options-section" style="display:none;">
+                <div class="card-title"><span class="step-no">2</span><span data-i18n="options.title">Options d'extraction</span></div>
+                <div class="form-group">
+                    <label for="transport-type" data-i18n="options.transportMode">Mode de transport</label>
+                    <select id="transport-type" class="inp">
+                        <option value="CAR"         data-i18n="transport.car">Voiture</option>
+                        <option value="TRUCK"       data-i18n="transport.truck">Camion</option>
+                        <option value="BICYCLE"     data-i18n="transport.bicycle">Vélo</option>
+                        <option value="MOTORCYCLE"  data-i18n="transport.motorcycle">Moto</option>
+                        <option value="PEDESTRIAN"  data-i18n="transport.pedestrian">Piéton</option>
+                        <option value="TAXI"        data-i18n="transport.taxi">Taxi</option>
+                        <option value="PUBLIC_BUS"  data-i18n="transport.bus">Bus</option>
+                        <option value="EMERGENCY"   data-i18n="transport.emergency">Urgence</option>
+                    </select>
+                </div>
+                <div style="margin-top:8px">
+                    <label style="font-size:12px;cursor:pointer;color:var(--ink-dim)">
+                        <input type="checkbox" id="filter-house-numbers"> <span data-i18n="options.filterHouseNumbers">Seulement avec n° de rue</span>
+                    </label>
+                </div>
+                <div style="margin-top:4px">
+                    <label style="font-size:12px;cursor:pointer;color:var(--ink-dim)">
+                        <input type="checkbox" id="filter-clipped"> <span data-i18n="options.filterClipped">Exclure éléments hors polygone</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 3. Actions -->
+            <div class="card zo-step" id="actions-section" style="display:none;">
+                <div class="card-title"><span class="step-no">3</span><span data-i18n="extract.title">Extraction</span></div>
+                <button id="extract-btn" class="btn-indigo" style="margin-top:0" disabled data-i18n="extract.btn.run">Extraire les segments</button>
+                <button id="download-btn" class="btn-emerald" style="display:none;" data-i18n="extract.btn.download">Télécharger CSV</button>
+                <div id="extract-status" class="status" aria-live="polite"></div>
+                <div id="extract-stats" class="stats"></div>
+            </div>
+
+            <!-- 4. Départ / Arrivée -->
+            <div class="card zo-step" id="startend-section" style="display:none;">
+                <div class="card-title"><span class="step-no">4</span><span data-i18n="startend.title">Départ / Arrivée</span></div>
+                <p class="instructions" style="margin-bottom:10px;" data-i18n="startend.instructions">
+                    Cliquez sur la carte pour définir le départ (vert) puis l'arrivée (rouge).
+                </p>
+                <div class="coords" id="route-info">
+                    <div id="start-info"></div>
+                    <div id="end-info"></div>
+                </div>
+                <button id="clear-route-btn" class="btn-red" style="display:none;" data-i18n="startend.btn.clear">Effacer départ/arrivée</button>
+            </div>
+
+            <!-- 5. Optimisation de route -->
+            <div class="card zo-step" id="optimize-section" style="display:none;">
+                <div class="card-title"><span class="step-no">5</span><span data-i18n="optimize.title">Optimisation de route</span></div>
+                <div style="margin-bottom:10px">
+                    <label style="font-size:12px;cursor:pointer;color:var(--ink-dim)">
+                        <input type="checkbox" id="minimal-waypoints" checked> <span data-i18n="optimize.minWp">Waypoints minimaux</span>
+                    </label>
+                </div>
+                <button id="optimize-btn" class="solve" disabled>
+                    <span class="sp"></span><span id="optimize-btn-label" data-i18n="optimize.btn.run">Lancer l'optimisation</span>
+                </button>
+                <div id="optimize-status" class="status" aria-live="polite"></div>
+                <div id="route-stats" class="stats"></div>
+                <!-- Diagnostic: optionally superpose the legacy TraceRoute polyline
+                     on top of the routing result for a visual A/B comparison.
+                     Hidden until a route is computed; clicking fires the
+                     /service/routing/1.0/traceroute call on the sampled polyline. -->
+                <button id="traceroute-compare-btn" class="btn-rose" style="display:none;margin-top:10px" data-i18n="optimize.btn.traceCompare">Superposer TraceRoute (comparaison)</button>
+            </div>
+
+            <!-- 6. Animation -->
+            <div class="card zo-step" id="animation-section" style="display:none;">
+                <div class="card-title"><span class="step-no">6</span><span data-i18n="animation.title">Animation</span></div>
+                <button id="animate-btn" class="btn-indigo" style="margin-top:0" data-i18n="animation.btn.start">Animer le parcours</button>
+                <button id="stop-animate-btn" class="btn-amber" style="display:none;" data-i18n="animation.btn.stop">Stop animation</button>
+                <div style="margin-top:10px;">
+                    <label style="font-size:11px;color:var(--ink-dim);font-weight:600">
+                        <span data-i18n="animation.speed">Vitesse</span> <span id="speed-label" class="mono" style="color:var(--ink);font-weight:700">×1.0</span>
+                    </label>
+                    <input type="range" id="anim-speed" min="1" max="50" value="10" style="width:100%;margin-top:4px;">
+                </div>
+            </div>
+
+            <!-- 7. Couches -->
+            <div class="card zo-step" id="layers-section" style="display:none;">
+                <div class="card-title"><span class="step-no">7</span><span data-i18n="layers.title">Couches</span></div>
+                <div class="row">
+                    <button id="toggle-routing-btn" class="btn-indigo btn-inline" data-i18n="layers.btn.hideRouting">Masquer Routing</button>
+                    <button id="toggle-traceroute-btn" class="btn-rose btn-inline" style="display:none;" data-i18n="layers.btn.hideTrace">Masquer TraceRoute</button>
+                </div>
+                <button id="toggle-points-btn" class="btn-cyan" style="margin-top:6px;" data-i18n="layers.btn.showPoints">Afficher liste des points</button>
+            </div>
+
+            <!-- Liste des points (on-demand, under Couches). Scrollable inner
+                 segment with a minimal cap so it never dominates the sidebar. -->
+            <div class="card" id="points-list-section" style="display:none;">
+                <div class="card-title" data-i18n="pointsList.title">Points du parcours</div>
+                <div id="points-list"></div>
+            </div>
+
+            <!-- 8. Téléchargements -->
+            <div class="card zo-step" id="downloads-section" style="display:none;">
+                <div class="card-title"><span class="step-no">8</span><span data-i18n="downloads.title">Téléchargements</span></div>
+                <button id="download-segments-ordered-btn" class="btn-violet" style="display:none;margin-top:0" data-i18n="downloads.segmentsOrdered">Télécharger segments + ordre</button>
+                <button id="download-min-wp-btn" class="btn-violet" style="display:none;" data-i18n="downloads.minWp">Télécharger waypoints minimaux</button>
+            </div>
+
+            <!-- Légende (collapsible) -->
+            <details class="card-collapsible">
+                <summary data-i18n="legend.title">Légende</summary>
+                <div class="card-collapsible-body">
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background:#10b981;"></div>
+                            <span data-i18n="legend.extracted">Point extrait (segment)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-bar" style="background:var(--indigo);"></div>
+                            <span data-i18n="legend.route">Route optimisée</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background:#10b981;border:2px solid #fff;box-shadow:0 0 0 1px #10b981;"></div>
+                            <span data-i18n="legend.start">Départ</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background:#ef4444;border:2px solid #fff;box-shadow:0 0 0 1px #ef4444;"></div>
+                            <span data-i18n="legend.end">Arrivée</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background:var(--indigo);color:#fff;font-size:8px;font-weight:700;line-height:10px;text-align:center;width:14px;height:14px;border:2px solid #fff;box-shadow:0 0 0 1px var(--indigo);">1</div>
+                            <span data-i18n="legend.numbered">Waypoint numéroté (routage)</span>
+                        </div>
+                        <div class="legend-item">
+                            <!-- Rose ring overlay: same visual as the live marker — empty circle outline -->
+                            <div class="legend-dot" style="background:transparent;border:2.5px solid #f43f5e;"></div>
+                            <span data-i18n="legend.minWp">Waypoint minimal</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-bar" style="background:#f43f5e;background-image:linear-gradient(90deg,#f43f5e 50%,transparent 50%);background-size:8px 4px;"></div>
+                            <span data-i18n="legend.trace">TraceRoute (diagnostique)</span>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </aside>
+
+    <!-- ==================== MAP ==================== -->
+    <div id="map"></div>
+
+    <!-- ==================== CONFIG MODAL ==================== -->
+    <div class="modal-backdrop" id="config-modal">
+        <div class="modal-box">
+            <div class="modal-top">
+                <!-- BeNomad logo above the title — same pattern as mp-tiles-demo
+                     and other BeNomad apps. Served from benomad.com so there's
+                     no asset to vendor; the URL is rate-stable. -->
+                <div class="modal-logo">
+                    <img src="https://benomad.com/assets/benomad-logo.svg" alt="BeNomad" width="160" height="28">
+                </div>
+                <!-- Product identity — Zone Optimizer + tagline + the
+                     auth-action title, mirroring mp-tiles-demo's stack
+                     (login_title + login_subtitle). -->
+                <h2 class="product-name" data-i18n="app.brand">Zone Optimizer</h2>
+                <div class="product-tagline" data-i18n="app.subtitle">Roads &amp; Routing</div>
+                <h3 data-i18n="config.title">Configuration Bemap</h3>
+                <p class="subtitle" data-i18n="config.modal.subtitle">Sélectionnez l'environnement et saisissez vos identifiants.</p>
+            </div>
+            <!-- Wrap inputs in a <form> so the password field gets a parent
+                 (Chrome DOM warning) and password managers detect it correctly.
+                 onsubmit="return false" so the form doesn't navigate — the
+                 modal-save click handler does the work. -->
+            <form class="modal-body" id="config-form" onsubmit="return false">
+                <div class="form-group">
+                    <label for="modal-env" data-i18n="config.field.env">Environnement</label>
+                    <!-- Single select populated by fillEnvSelect() with the
+                         entries in ZO.Config.ENVIRONMENTS. No custom URL,
+                         no fallback input. -->
+                    <select id="modal-env" class="inp" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="modal-user" data-i18n="config.field.user">Utilisateur</label>
+                    <input type="text" id="modal-user" class="inp" placeholder="username" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="modal-pass" data-i18n="config.field.pass">Mot de passe</label>
+                    <input type="password" id="modal-pass" class="inp" placeholder="password" autocomplete="current-password" required>
+                </div>
+                <!-- "Se souvenir" — same row layout as mp-tiles-demo's
+                     .remember (flex, gap:8px, 12px muted text). Styled in
+                     _modal.scss alongside the rest of the modal. -->
+                <label class="remember">
+                    <input type="checkbox" id="modal-remember">
+                    <span data-i18n="config.field.remember">Se souvenir sur ce poste</span>
+                </label>
+                <div class="err" id="modal-err"></div>
+                <div class="actions">
+                    <button type="button" class="cancel" id="modal-cancel" data-i18n="config.btn.cancel">Annuler</button>
+                    <button type="submit" class="btn-indigo" id="modal-save" data-i18n="config.btn.save">Valider</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== EXTERNAL LIBS (must be on window before main.js) ==================== -->
+    <!--
+      The bemap-js-api SDK is NOT an ES module — it self-attaches to
+      window.bemap and expects window.jQuery to already exist. So we
+      load both as classic <script> tags from public/ (Vite serves them
+      at the URL root), then the module entry imports the app code.
+    -->
+    <script src="./jquery/jquery.min.js"></script>
+    <script src="./bemap-js-api/maplibre-gl.js"></script>
+    <script src="./bemap-js-api/pmtiles.js"></script>
+    <script src="./bemap-js-api/bemap-js-api.js"></script>
+
+    <!-- ==================== APP ENTRY (ES module) ==================== -->
+</body>
+</html>
